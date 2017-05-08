@@ -1,0 +1,2 @@
+BINDERD_ADD_TEST(binder_driver_interface_tests binder_driver_interface_tests.cpp)
+BINDERD_ADD_TEST(binder_lib_tests binder_lib_tests.cpp)
