@@ -343,6 +343,12 @@ void BpBinder::onFirstRef()
     if (ipc) ipc->incStrongHandle(mHandle);
 }
 
+void BpBinder::incStrongHandle()
+{
+  IPCThreadState* ipc = IPCThreadState::self();
+  if (ipc) ipc->incStrongHandle(mHandle);
+}
+
 void BpBinder::onLastStrongRef(const void* /*id*/)
 {
     ALOGV("onLastStrongRef BpBinder %p handle %d\n", this, mHandle);

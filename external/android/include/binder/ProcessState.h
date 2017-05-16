@@ -26,6 +26,10 @@
 
 #include <pthread.h>
 
+namespace binderd {
+class Client;
+}
+
 // ---------------------------------------------------------------------------
 namespace android {
 
@@ -81,8 +85,7 @@ private:
 
             handle_entry*       lookupHandleLocked(int32_t handle);
 
-            int                 mDriverFD;
-            void*               mVMStart;
+            binderd::Client*    mClient = nullptr;
 
             // Protects thread count variable below.
             pthread_mutex_t     mThreadCountLock;

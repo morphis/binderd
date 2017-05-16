@@ -86,8 +86,8 @@ protected:
     virtual void            onLastStrongRef(const void* id);
     virtual bool            onIncStrongAttempted(uint32_t flags, const void* id);
 
-    inline  IBinder*        remote()                { return mRemote; }
-    inline  IBinder*        remote() const          { return mRemote; }
+    inline  IBinder*        remote()                { ALOGI("mRemote %p", mRemote); return mRemote; }
+    inline  IBinder*        remote() const          { ALOGI("mRemote %p", mRemote); return mRemote; }
 
 private:
                             BpRefBase(const BpRefBase& o);

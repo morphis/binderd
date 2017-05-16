@@ -20,6 +20,6 @@ set(SOURCES
     ${CMAKE_SOURCE_DIR}/external/android/include/log/log.h
     ${CMAKE_SOURCE_DIR}/external/android/include/log/logger.h)
 
-add_definitions(-D_GNU_SOURCE -DFAKE_LOG_DEVICE=1)
+add_definitions(-D_GNU_SOURCE -D__ANDROID__ -DFAKE_LOG_DEVICE=1)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
 add_library(log STATIC ${SOURCES})

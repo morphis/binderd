@@ -1,0 +1,9 @@
+include_directories(
+    ${CMAKE_SOURCE_DIR}/src)
+
+BINDERD_ADD_TEST(object_pool_tests object_pool_tests.cpp)
+BINDERD_ADD_TEST(object_translator_tests object_translator_tests.cpp)
+BINDERD_ADD_TEST(message_tests message_tests.cpp)
+BINDERD_ADD_TEST(parcel_transaction_data_writer_tests parcel_transaction_data_writer_tests.cpp)
+BINDERD_ADD_TEST(client_tests client_tests.cpp)
+BINDERD_ADD_TEST(server_session_tests server_session_tests.cpp)

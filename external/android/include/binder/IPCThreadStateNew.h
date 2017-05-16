@@ -1,0 +1,94 @@
+/*
+ * Copyright (C) 2017 Simon Fels <morphis@gravedo.de>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef ANDROID_IPC_THREAD_STATE_NEW_H
+#define ANDROID_IPC_THREAD_STATE_NEW_H
+
+#include <binder/ProcessState.h>
+
+namespace android {
+class IPCThreadStateNew {
+ public:
+  static IPCThreadStateNew* self();
+  static IPCThreadStateNew* selfOrNull(); // self(), but won't instantiate
+
+  sp<ProcessState> process();
+  status_t clearLastError();
+  pid_t getCallingPid() const;
+  uid_t getCallingUid() const;
+
+  void setStrictModePolicy(int32_t policy);
+  int32_t getStrictModePolicy() const;
+
+  void setLastTransactionBinderFlags(int32_t flags);
+  int32_t getLastTransactionBinderFlags() const;
+
+  int64_t clearCallingIdentity();
+  void restoreCallingIdentity(int64_t token);
+
+  int setupPolling(int* fd);
+  status_t handlePolledCommands();
+  void flushCommands();
+
+  void joinThreadPool(bool isMain = true);
+
+  // Stop the local process.
+  void stopProcess(bool immediate = true);
+
+  status_t transact(int32_t handle, uint32_t code,
+                    const Parcel& data,
+                    Parcel* reply, uint32_t flags);
+
+  void incStrongHandle(int32_t handle);
+  void decStrongHandle(int32_t handle);
+  void incWeakHandle(int32_t handle);
+  void decWeakHandle(int32_t handle);
+  status_t attemptIncStrongHandle(int32_t handle);
+  static void expungeHandle(int32_t handle, IBinder* binder);
+  status_t requestDeathNotification(int32_t handle, BpBinder* proxy);
+  status_t clearDeathNotification(int32_t handle, BpBinder* proxy);
+
+  static  void shutdown();
+
+  // Call this to disable switching threads to background scheduling when
+  // receiving incoming IPC calls.  This is specifically here for the
+  // Android system process, since it expects to have background apps calling
+  // in to it but doesn't want to acquire locks in its services while in
+  // the background.
+  static  void disableBackgroundScheduling(bool disable);
+
+  // Call blocks until the number of executing binder threads is less than
+  // the maximum number of binder threads threads allowed for this process.
+  void blockUntilThreadAvailable();
+
+ private:
+  IPCThreadStateNew();
+  ~IPCThreadStateNew();
+
+  void clearCaller();
+
+  static void threadDestructor(void *st);
+
+  const sp<ProcessState> mProcess;
+  status_t mLastError;
+  pid_t mCallingPid;
+  uid_t mCallingUid;
+  int32_t mStrictModePolicy;
+  int32_t mLastTransactionBinderFlags;
+};
+}
+
+#endif

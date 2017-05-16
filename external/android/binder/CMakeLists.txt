@@ -1,4 +1,5 @@
 include_directories(
+    ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/external/android/include)
 
 set(SOURCES
@@ -22,6 +23,7 @@ set(SOURCES
     MemoryDealer.cpp
     MemoryHeapBase.cpp
     Parcel.cpp
+    TransactionDataFromParcel.cpp
     PermissionCache.cpp
     PersistableBundle.cpp
     ProcessInfoService.cpp
@@ -60,6 +62,6 @@ set(SOURCES
     ${CMAKE_SOURCE_DIR}/external/android/include/binder/TextOutput.h
 )
 
-add_definitions(-D_GNU_SOURCE)
+add_definitions(-D_GNU_SOURCE -D__ANDROID__)
 add_library(binder SHARED ${SOURCES})
-target_link_libraries(binder utils cutils log system-properties)
+target_link_libraries(binder utils cutils log system-properties binderd-core)

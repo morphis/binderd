@@ -33,7 +33,7 @@ namespace android {
 sp<IServiceManager> defaultServiceManager()
 {
     if (gDefaultServiceManager != NULL) return gDefaultServiceManager;
-
+    ALOGE("defaultServiceManager");
     {
         AutoMutex _l(gDefaultServiceManagerLock);
         while (gDefaultServiceManager == NULL) {
@@ -45,6 +45,15 @@ sp<IServiceManager> defaultServiceManager()
     }
 
     return gDefaultServiceManager;
+}
+
+void resetServiceManager()
+{
+  if (gDefaultServiceManager == NULL)
+    return;
+
+  AutoMutex _l(gDefaultServiceManagerLock);
+  gDefaultServiceManager.clear();
 }
 
 bool checkCallingPermission(const String16& permission)
@@ -134,6 +143,7 @@ public:
     BpServiceManager(const sp<IBinder>& impl)
         : BpInterface<IServiceManager>(impl)
     {
+      ALOGI("BpServiceManager");
     }
 
     virtual sp<IBinder> getService(const String16& name) const
@@ -160,6 +170,7 @@ public:
     virtual status_t addService(const String16& name, const sp<IBinder>& service,
             bool allowIsolated)
     {
+        ALOGE("AddService %s %p", String8(name).string(), service.get());
         Parcel data, reply;
         data.writeInterfaceToken(IServiceManager::getInterfaceDescriptor());
         data.writeString16(name);
@@ -188,5 +199,46 @@ public:
 };
 
 IMPLEMENT_META_INTERFACE(ServiceManager, "android.os.IServiceManager");
+
+// ----------------------------------------------------------------------
+status_t BnServiceManager::onTransact(
+    uint32_t code, const Parcel& data, Parcel* reply, uint32_t flags)
+{
+    switch(code) {
+        case GET_SERVICE_TRANSACTION: {
+            CHECK_INTERFACE(IServiceManager, data, reply);
+            String16 which = data.readString16();
+            sp<IBinder> b = const_cast<BnServiceManager*>(this)->getService(which);
+            reply->writeStrongBinder(b);
+            return NO_ERROR;
+        } break;
+        case CHECK_SERVICE_TRANSACTION: {
+            CHECK_INTERFACE(IServiceManager, data, reply);
+            String16 which = data.readString16();
+            sp<IBinder> b = const_cast<BnServiceManager*>(this)->checkService(which);
+            reply->writeStrongBinder(b);
+            return NO_ERROR;
+        } break;
+        case ADD_SERVICE_TRANSACTION: {
+            CHECK_INTERFACE(IServiceManager, data, reply);
+            String16 which = data.readString16();
+            sp<IBinder> b = data.readStrongBinder();
+            status_t err = addService(which, b);
+            reply->writeInt32(err);
+            return NO_ERROR;
+        } break;
+        case LIST_SERVICES_TRANSACTION: {
+            CHECK_INTERFACE(IServiceManager, data, reply);
+            Vector<String16> list = listServices();
+            const int32_t n = data.readInt32();
+            if (n >= list.size())
+              return BAD_VALUE;
+            reply->writeString16(list[n]);
+            return NO_ERROR;
+        } break;
+        default:
+            return BBinder::onTransact(code, data, reply, flags);
+    }
+}
 
 }; // namespace android

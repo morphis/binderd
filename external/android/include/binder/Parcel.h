@@ -346,7 +346,8 @@ public:
     static size_t       getGlobalAllocSize();
     static size_t       getGlobalAllocCount();
 
-private:
+// FIXME (binderd) private:
+public:
     typedef void        (*release_func)(Parcel* parcel,
                                         const uint8_t* data, size_t dataSize,
                                         const binder_size_t* objects, size_t objectsSize,

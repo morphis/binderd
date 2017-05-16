@@ -187,7 +187,8 @@ static void release_object(const sp<ProcessState>& proc,
         case BINDER_TYPE_BINDER:
             if (obj.binder) {
                 LOG_REFS("Parcel %p releasing reference on local %p", who, obj.cookie);
-                reinterpret_cast<IBinder*>(obj.cookie)->decStrong(who);
+                // FIXME(morphis): Find a way not to replace the cookie inside the data ...
+                //reinterpret_cast<IBinder*>(obj.cookie)->decStrong(who);
             }
             return;
         case BINDER_TYPE_WEAK_BINDER:
@@ -263,6 +264,7 @@ status_t flatten_binder(const sp<ProcessState>& /*proc*/,
             obj.type = BINDER_TYPE_BINDER;
             obj.binder = reinterpret_cast<uintptr_t>(local->getWeakRefs());
             obj.cookie = reinterpret_cast<uintptr_t>(local);
+            ALOGE("flatten_binder: binder=%d cookie=%d", obj.binder, obj.cookie);
         }
     } else {
         obj.type = BINDER_TYPE_BINDER;
@@ -345,6 +347,8 @@ status_t unflatten_binder(const sp<ProcessState>& proc,
                     static_cast<BpBinder*>(out->get()), *flat, in);
         }
     }
+
+    ALOGE("Cannot read flat object");
     return BAD_TYPE;
 }
 

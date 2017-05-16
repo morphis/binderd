@@ -1,0 +1,1 @@
+BINDERD_ADD_TEST(performance_tests performance_tests.cpp)

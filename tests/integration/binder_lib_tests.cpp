@@ -93,7 +93,7 @@ pid_t start_server_process(int arg2)
     }
     close(pipefd[1]);
     ret = read(pipefd[0], &status, sizeof(status));
-    //printf("pipe read returned %d, status %d\n", ret, status);
+    printf("pipe read returned %d, status %d\n", ret, status);
     close(pipefd[0]);
     if (ret == sizeof(status)) {
         ret = status;
@@ -923,13 +923,10 @@ int run_server(int index, int readypipefd)
     }
     write(readypipefd, &ret, sizeof(ret));
     close(readypipefd);
-    //printf("%s: ret %d\n", __func__, ret);
     if (ret)
         return 1;
-    //printf("%s: joinThreadPool\n", __func__);
     ProcessState::self()->startThreadPool();
     IPCThreadState::self()->joinThreadPool();
-    //printf("%s: joinThreadPool returned\n", __func__);
     return 1; /* joinThreadPool should not return */
 }
 

@@ -92,35 +92,13 @@ private:
                                 IPCThreadState();
                                 ~IPCThreadState();
 
-            status_t            sendReply(const Parcel& reply, uint32_t flags);
-            status_t            waitForResponse(Parcel *reply,
-                                                status_t *acquireResult=NULL);
-            status_t            talkWithDriver(bool doReceive=true);
-            status_t            writeTransactionData(int32_t cmd,
-                                                     uint32_t binderFlags,
-                                                     int32_t handle,
-                                                     uint32_t code,
-                                                     const Parcel& data,
-                                                     status_t* statusBuffer);
-            status_t            getAndExecuteCommand();
-            status_t            executeCommand(int32_t command);
-            void                processPendingDerefs();
-
             void                clearCaller();
 
     static  void                threadDestructor(void *st);
-    static  void                freeBuffer(Parcel* parcel,
-                                           const uint8_t* data, size_t dataSize,
-                                           const binder_size_t* objects, size_t objectsSize,
-                                           void* cookie);
     
     const   sp<ProcessState>    mProcess;
     const   pid_t               mMyThreadId;
-            Vector<BBinder*>    mPendingStrongDerefs;
-            Vector<RefBase::weakref_type*> mPendingWeakDerefs;
 
-            Parcel              mIn;
-            Parcel              mOut;
             status_t            mLastError;
             pid_t               mCallingPid;
             uid_t               mCallingUid;

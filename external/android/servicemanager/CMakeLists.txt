@@ -1,11 +1,12 @@
 include_directories(
-    ${CMAKE_SOURCE_DIR}/external/android/include)
+    ${CMAKE_SOURCE_DIR}/external/android/include
+    ${CMAKE_SOURCE_DIR}/src)
 
 set(SOURCES
-    binder.c
-    service_manager.c)
+    binder.cpp
+    service_manager.cpp)
 
-add_definitions(-D_GNU_SOURCE)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
-add_executable(servicemanager ${SOURCES})
-target_link_libraries(servicemanager binder pthread)
+add_definitions(-D_GNU_SOURCE -D__ANDROID__)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-permissive")
+add_library(servicemanager SHARED ${SOURCES})
+target_link_libraries(servicemanager binder binderd-core pthread)

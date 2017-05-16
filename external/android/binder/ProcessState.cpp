@@ -42,6 +42,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include "binderd/client.h"
+
 #define BINDER_VM_SIZE ((1*1024*1024) - (4096 *2))
 #define DEFAULT_MAX_BINDER_THREADS 15
 
@@ -151,7 +153,7 @@ bool ProcessState::becomeContextManager(context_check_func checkFunc, void* user
         mBinderContextUserData = userData;
 
         int dummy = 0;
-        status_t result = ioctl(mDriverFD, BINDER_SET_CONTEXT_MGR, &dummy);
+        status_t result = OK; //ioctl(mDriverFD, BINDER_SET_CONTEXT_MGR, &dummy);
         if (result == 0) {
             mManagesContexts = true;
         } else if (result == -1) {
@@ -288,58 +290,22 @@ void ProcessState::spawnPooledThread(bool isMain)
 {
     if (mThreadPoolStarted) {
         String8 name = makeBinderThreadName();
-        ALOGV("Spawning new pooled thread, name=%s\n", name.string());
+        ALOGE("Spawning new pooled thread, name=%s\n", name.string());
         sp<Thread> t = new PoolThread(isMain);
         t->run(name.string());
     }
 }
 
 status_t ProcessState::setThreadPoolMaxThreadCount(size_t maxThreads) {
-    status_t result = NO_ERROR;
-    if (ioctl(mDriverFD, BINDER_SET_MAX_THREADS, &maxThreads) != -1) {
-        mMaxThreads = maxThreads;
-    } else {
-        result = -errno;
-        ALOGE("Binder ioctl to set max threads failed: %s", strerror(-result));
-    }
-    return result;
+  return NO_ERROR;
 }
 
 void ProcessState::giveThreadPoolName() {
     androidSetThreadName( makeBinderThreadName().string() );
 }
 
-static int open_driver()
-{
-    int fd = open("/dev/binder", O_RDWR | O_CLOEXEC);
-    if (fd >= 0) {
-        int vers = 0;
-        status_t result = ioctl(fd, BINDER_VERSION, &vers);
-        if (result == -1) {
-            ALOGE("Binder ioctl to obtain version failed: %s", strerror(errno));
-            close(fd);
-            fd = -1;
-        }
-        if (result != 0 || vers != BINDER_CURRENT_PROTOCOL_VERSION) {
-            ALOGE("Binder driver protocol does not match user space protocol!");
-            close(fd);
-            fd = -1;
-        }
-        size_t maxThreads = DEFAULT_MAX_BINDER_THREADS;
-        result = ioctl(fd, BINDER_SET_MAX_THREADS, &maxThreads);
-        if (result == -1) {
-            ALOGE("Binder ioctl to set max threads failed: %s", strerror(errno));
-        }
-    } else {
-        ALOGW("Opening '/dev/binder' failed: %s\n", strerror(errno));
-    }
-    return fd;
-}
-
-ProcessState::ProcessState()
-    : mDriverFD(open_driver())
-    , mVMStart(MAP_FAILED)
-    , mThreadCountLock(PTHREAD_MUTEX_INITIALIZER)
+ProcessState::ProcessState() :
+    mThreadCountLock(PTHREAD_MUTEX_INITIALIZER)
     , mThreadCountDecrement(PTHREAD_COND_INITIALIZER)
     , mExecutingThreadsCount(0)
     , mMaxThreads(DEFAULT_MAX_BINDER_THREADS)
@@ -349,23 +315,11 @@ ProcessState::ProcessState()
     , mBinderContextUserData(NULL)
     , mThreadPoolStarted(false)
     , mThreadPoolSeq(1)
+    , mClient(binderd::Client::CreateNotTracked())
 {
-    if (mDriverFD >= 0) {
-        // mmap the binder, providing a chunk of virtual address space to receive transactions.
-        mVMStart = mmap(0, BINDER_VM_SIZE, PROT_READ, MAP_PRIVATE | MAP_NORESERVE, mDriverFD, 0);
-        if (mVMStart == MAP_FAILED) {
-            // *sigh*
-            ALOGE("Using /dev/binder failed: unable to mmap transaction memory.\n");
-            close(mDriverFD);
-            mDriverFD = -1;
-        }
-    }
-
-    LOG_ALWAYS_FATAL_IF(mDriverFD < 0, "Binder driver could not be opened.  Terminating.");
 }
 
 ProcessState::~ProcessState()
 {
 }
-        
 }; // namespace android

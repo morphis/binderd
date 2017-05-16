@@ -70,6 +70,6 @@ set(SOURCES
     ${CMAKE_SOURCE_DIR}/external/android/include/cutils/trace.h
     ${CMAKE_SOURCE_DIR}/external/android/include/cutils/uevent.h)
 
-add_definitions(-D_GNU_SOURCE)
+add_definitions(-D_GNU_SOURCE -D__ANDROID__)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
 add_library(cutils STATIC ${SOURCES})
